@@ -87,18 +87,49 @@ switchDesktopByNumber(targetDesktop)
         return
     }
 
-    ; Go right until we reach the desktop we want
-    while(CurrentDesktop < targetDesktop) {
-        Send ^#{Right}
-        CurrentDesktop++
-        OutputDebug, [right] target: %targetDesktop% current: %CurrentDesktop%
-    }
+    if (Abs(CurrentDesktop - targetDesktop) < 2) {
+        ; Go right until we reach the desktop we want
+        while (CurrentDesktop < targetDesktop) {
+            Send ^#{Right}
+            CurrentDesktop++
+            OutputDebug, [right] target: %targetDesktop% current: %CurrentDesktop%
+        }
 
-    ; Go left until we reach the desktop we want
-    while(CurrentDesktop > targetDesktop) {
-        Send ^#{Left}
-        CurrentDesktop--
-        OutputDebug, [left] target: %targetDesktop% current: %CurrentDesktop%
+        ; Go left until we reach the desktop we want
+        while (CurrentDesktop > targetDesktop) {
+            Send ^#{Left}
+            CurrentDesktop--
+            OutputDebug, [left] target: %targetDesktop% current: %CurrentDesktop%
+        }
+    } else {
+        ; Open task view and wait for it to become active
+        Loop
+        {
+            OutputDebug, Opening Task View
+            Send, #{Tab}
+            OutputDebug, Waiting for Task View
+            WinWaitActive, ahk_class MultitaskingViewFrame,, 0.2
+            if ErrorLevel {
+                OutputDebug, Timed out waiting for task view
+            }
+            else {
+                break
+            }
+        }
+
+        ; Focus on desktops
+        Send, {Tab}
+
+        ; Page through desktops without opening any
+        if (targetDesktop > 1) {
+            targetDesktop--
+            Send, {Right %targetDesktop%}
+            targetDesktop++
+        }
+
+        ; Finally, select the desktop
+        Send, {Enter}
+        CurrentDesktop := targetDesktop
     }
 }
 
