@@ -87,18 +87,49 @@ switchDesktopByNumber(targetDesktop)
         return
     }
 
-    ; Go right until we reach the desktop we want
-    while(CurrentDesktop < targetDesktop) {
-        Send ^#{Right}
-        CurrentDesktop++
-        OutputDebug, [right] target: %targetDesktop% current: %CurrentDesktop%
-    }
+    if (Abs(CurrentDesktop - targetDesktop) < 2) {
+        ; Go right until we reach the desktop we want
+        while (CurrentDesktop < targetDesktop) {
+            Send ^#{Right}
+            CurrentDesktop++
+            OutputDebug, [right] target: %targetDesktop% current: %CurrentDesktop%
+        }
 
-    ; Go left until we reach the desktop we want
-    while(CurrentDesktop > targetDesktop) {
-        Send ^#{Left}
-        CurrentDesktop--
-        OutputDebug, [left] target: %targetDesktop% current: %CurrentDesktop%
+        ; Go left until we reach the desktop we want
+        while (CurrentDesktop > targetDesktop) {
+            Send ^#{Left}
+            CurrentDesktop--
+            OutputDebug, [left] target: %targetDesktop% current: %CurrentDesktop%
+        }
+    } else {
+        ; Open task view and wait for it to become active
+        Loop
+        {
+            OutputDebug, Opening Task View
+            Send, #{Tab}
+            OutputDebug, Waiting for Task View
+            WinWaitActive, ahk_class MultitaskingViewFrame,, 0.2
+            if ErrorLevel {
+                OutputDebug, Timed out waiting for task view
+            }
+            else {
+                break
+            }
+        }
+
+        ; Focus on desktops
+        Send, {Tab}
+
+        ; Page through desktops without opening any
+        if (targetDesktop > 1) {
+            targetDesktop--
+            Send, {Right %targetDesktop%}
+            targetDesktop++
+        }
+
+        ; Finally, select the desktop
+        Send, {Enter}
+        CurrentDesktop := targetDesktop
     }
 }
 
@@ -131,37 +162,17 @@ SetKeyDelay, 75
 mapDesktopsFromRegistry()
 OutputDebug, [loading] desktops: %DesktopCount% current: %CurrentDesktop%
 
-; User config!
-; This section binds the key combo to the switch/create/delete actions
-CapsLock & 1::switchDesktopByNumber(1)
-CapsLock & 2::switchDesktopByNumber(2)
-CapsLock & 3::switchDesktopByNumber(3)
-CapsLock & 4::switchDesktopByNumber(4)
-CapsLock & 5::switchDesktopByNumber(5)
-CapsLock & 6::switchDesktopByNumber(6)
-CapsLock & 7::switchDesktopByNumber(7)
-CapsLock & 8::switchDesktopByNumber(8)
-CapsLock & 9::switchDesktopByNumber(9)
-CapsLock & n::switchDesktopByNumber(CurrentDesktop + 1)
-CapsLock & p::switchDesktopByNumber(CurrentDesktop - 1)
-CapsLock & s::switchDesktopByNumber(CurrentDesktop + 1)
-CapsLock & a::switchDesktopByNumber(CurrentDesktop - 1)
-CapsLock & c::createVirtualDesktop()
-CapsLock & d::deleteVirtualDesktop()
-
 ; Alternate keys for this config. Adding these because DragonFly (python) doesn't send CapsLock correctly.
-^!1::switchDesktopByNumber(1)
-^!2::switchDesktopByNumber(2)
-^!3::switchDesktopByNumber(3)
-^!4::switchDesktopByNumber(4)
-^!5::switchDesktopByNumber(5)
-^!6::switchDesktopByNumber(6)
-^!7::switchDesktopByNumber(7)
-^!8::switchDesktopByNumber(8)
-^!9::switchDesktopByNumber(9)
-^!n::switchDesktopByNumber(CurrentDesktop + 1)
-^!p::switchDesktopByNumber(CurrentDesktop - 1)
-^!s::switchDesktopByNumber(CurrentDesktop + 1)
-^!a::switchDesktopByNumber(CurrentDesktop - 1)
-^!c::createVirtualDesktop()
-^!d::deleteVirtualDesktop()
+#1::switchDesktopByNumber(1)
+#2::switchDesktopByNumber(2)
+#3::switchDesktopByNumber(3)
+#4::switchDesktopByNumber(4)
+#5::switchDesktopByNumber(5)
+#6::switchDesktopByNumber(6)
+#7::switchDesktopByNumber(7)
+#8::switchDesktopByNumber(8)
+#9::switchDesktopByNumber(9)
+#n::switchDesktopByNumber(CurrentDesktop + 1)
+#p::switchDesktopByNumber(CurrentDesktop - 1)
+#s::switchDesktopByNumber(CurrentDesktop + 1)
+#a::switchDesktopByNumber(CurrentDesktop - 1)
